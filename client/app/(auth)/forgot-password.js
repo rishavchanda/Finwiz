@@ -97,6 +97,7 @@ const SignIn = () => {
   const [user, setUser] = useState({
     email: "",
     password: "",
+    confirmPassword: "",
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -167,12 +168,38 @@ const SignIn = () => {
       }
     }
 
+    if (name === "confirmPassword") {
+      if (!value) {
+        setButtonDisabled(true);
+      }
+      if (value && value !== user.password) {
+        setError({
+          ...error,
+          confirmPassword: "Passwords do not match!",
+        });
+        setButtonDisabled(true);
+      } else {
+        setError({
+          ...error,
+          confirmPassword: "",
+        });
+      }
+    }
+
     setUser({ ...user, [name]: value });
   };
 
   useEffect(() => {
     // If there is no error message and all the fields are filled, then enable the button
-    if (!error.email && !error.password && user.email && user.password) {
+    if (
+      !error.email &&
+      !error.password &&
+      !error.confirmPassword &&
+      user.email &&
+      user.password &&
+      user.confirmPassword &&
+      user.password === user.confirmPassword
+    ) {
       setButtonDisabled(false);
     } else {
       setButtonDisabled(true);
@@ -200,9 +227,9 @@ const SignIn = () => {
         }}
       >
         <Logo>Finwiz</Logo>
-        <HeadingText>Welcome Back 👋</HeadingText>
+        <HeadingText>Forgot Password 🔒</HeadingText>
         <SubHeadingText>
-          Welcome Back, Please Enter Your Email Id{" "}
+          Try to reset your old password and create a new password.
         </SubHeadingText>
       </View>
       <View
@@ -259,6 +286,23 @@ const SignIn = () => {
             type={"default"}
             error={error.password}
           />
+          <InputText
+            startIcon={
+              <Icon
+                name="lock-outline"
+                size={24}
+                color={theme.text_secondary}
+              />
+            }
+            value={user.confirmPassword}
+            onChangeText={handleInputChange}
+            secureTextEntry={!isPasswordVisible}
+            placeholder="Re-enter password"
+            label="Confirm Password"
+            name="confirmPassword"
+            type={"default"}
+            error={error.confirmPassword}
+          />
           {/* <TextArea
             label="Description"
             value={description}
@@ -269,15 +313,6 @@ const SignIn = () => {
             placeholder="Enter your description here..."
           />{" "} */}
         </View>
-        <ForgotButton>
-          <TextButton
-            onPress={() => router.replace("/forgot-password")}
-            label="Forgot Password?"
-            color={theme.primary}
-            disabled={false}
-            enabled={true}
-          />
-        </ForgotButton>
 
         <Button
           type="filled"
@@ -287,39 +322,16 @@ const SignIn = () => {
           onPress={handleSignIn}
           disabled={buttonDisabled}
         >
-          Continue
+          Reset Password
         </Button>
-
-        <Seperator>
-          <Hr />
-          <OrText>Or Continue With</OrText>
-          <Hr />
-        </Seperator>
-        <SocialAuth>
-          <Button
-            startIcon={
-              <Image
-                source={require("../../assets/icons/Google.png")}
-                style={{ width: 20, height: 20 }}
-              />
-            }
-            type="outlined"
-            bordercolor={theme.text_secondary_light}
-            color={theme.text_secondary}
-            loading={loading}
-            onPress={handleSignIn}
-          >
-            Continue with Google
-          </Button>
-        </SocialAuth>
         <AlreadyAccount>
-          <Txt>Don't have an account on Renegan? </Txt>
+          <Txt>Don't want to change password? </Txt>
           <TextButton
-            label="Sign Up"
+            label="Sign In"
             color={theme.primary}
             disabled={false}
             enabled={true}
-            onPress={() => router.replace("/sign-up")}
+            onPress={() => router.replace("/sign-in")}
           />
         </AlreadyAccount>
       </View>

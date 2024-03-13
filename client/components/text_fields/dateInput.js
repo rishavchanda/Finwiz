@@ -1,6 +1,7 @@
 import React, { useState } from "react";
-import { View, TextInput, Text, TouchableOpacity } from "react-native";
+import { View, TouchableOpacity, Text } from "react-native";
 import styled, { useTheme } from "styled-components/native";
+import DateTimePickerModal from "react-native-modal-datetime-picker";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 
 const InputContainer = styled.View`
@@ -25,12 +26,6 @@ const InputWrapper = styled.View`
   flex: 1;
 `;
 
-const InputField = styled.TextInput`
-  font-size: 14px;
-  color: ${({ theme }) => theme.text};
-  padding-bottom: 6px;
-`;
-
 const Label = styled.Text`
   font-size: 10px;
   font-weight: 700;
@@ -48,79 +43,87 @@ const IconContainer = styled.View`
   align-items: center;
 `;
 
-const ToggleButton = styled.TouchableOpacity`
-  padding: 4px;
+const TextValue = styled.Text`
+  font-size: 14px;
+  color: ${({ theme }) => theme.text};
+  padding: 4px 0px;
+  padding-bottom: 8px;
+  ${({ placeholder }) =>
+    placeholder &&
+    `
+    color: #777
+    `}
 `;
 
-const InputText = ({
+const DateInput = ({
   startIcon,
   endIcon,
   label,
   value,
   name,
-  onChangeText,
+  onChange,
+  placeholder,
   error,
-  secureTextEntry,
-  type,
-  custom,
   ...props
 }) => {
   const theme = useTheme();
-  const [isPasswordVisible, setPasswordVisible] = useState(!secureTextEntry);
   const [isFocused, setIsFocused] = useState(false);
-
-  const togglePasswordVisibility = () => {
-    setPasswordVisible((prev) => !prev);
-  };
+  const [isDatePickerVisible, setDatePickerVisible] = useState(false);
 
   const handleFocus = () => {
     setIsFocused(true);
+    setDatePickerVisible(true);
   };
 
   const handleBlur = () => {
     setIsFocused(false);
   };
 
+  const handleDateChange = (selectedDate) => {
+    setDatePickerVisible(false);
+    if (selectedDate) {
+      const formattedDate = formatDate(selectedDate);
+      onChange(formattedDate, name);
+    }
+  };
+
+  const formatDate = (date) => {
+    // Format the date as dd-mm-yyyy
+    const day = date.getDate().toString().padStart(2, "0");
+    const month = (date.getMonth() + 1).toString().padStart(2, "0");
+    const year = date.getFullYear().toString();
+    return `${day} / ${month} / ${year}`;
+  };
+
   return (
     <View>
       <InputContainer focused={isFocused} error={error}>
         {startIcon && <IconContainer>{startIcon}</IconContainer>}
-        <Hr error={error} />
+        <Hr />
         <InputWrapper>
           <Label error={error} focused={isFocused}>
             {label}
           </Label>
-          {custom ? (
-            { custom }
-          ) : (
-            <InputField
-              value={value}
-              name={name}
-              onChangeText={(text) => onChangeText(text, name)}
-              onFocus={handleFocus}
-              onBlur={handleBlur}
-              secureTextEntry={secureTextEntry && !isPasswordVisible}
-              placeholderTextColor={"#777"}
-              keyboardType={type}
-              {...props}
-            />
-          )}
+          <TouchableOpacity onPress={handleFocus}>
+            <TextValue placeholder={value === ""}>
+              {value === "" ? placeholder : value}
+            </TextValue>
+          </TouchableOpacity>
         </InputWrapper>
         {endIcon && <IconContainer>{endIcon}</IconContainer>}
-        {secureTextEntry && (
-          <ToggleButton onPress={togglePasswordVisibility}>
-            <Icon
-              name={isPasswordVisible ? "eye" : "eye-off"}
-              size={22}
-              color={theme.text_secondary}
-            />
-          </ToggleButton>
-        )}
       </InputContainer>
 
       {error && <ErrorText>{error}</ErrorText>}
+
+      <DateTimePickerModal
+        isVisible={isDatePickerVisible}
+        mode="date"
+        date={new Date()}
+        onConfirm={handleDateChange}
+        onCancel={() => setDatePickerVisible(false)}
+      />
     </View>
   );
 };
 
-export default InputText;
+export default DateInput;

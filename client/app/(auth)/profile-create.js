@@ -1,15 +1,19 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, StatusBar } from "react-native";
+import { View, Text, StatusBar, DatePickerIOS } from "react-native";
 import InputText from "../../components/text_fields/inputText";
 import Button from "../../components/buttons/button";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ScrollView } from "react-native-gesture-handler";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
+import FontAwesome from "react-native-vector-icons/FontAwesome";
 import styled, { useTheme } from "styled-components/native";
 import { Image } from "react-native-elements";
 import TextButton from "../../components/buttons/textButton";
 import { useThemeContext } from "../../context/themeContext";
 import { router } from "expo-router";
+import TextArea from "../../components/text_fields/inputTextArea";
+import DateInput from "../../components/text_fields/dateInput";
+import SelectableDropdown from "../../components/text_fields/selectableDropdown";
 
 const Wrapper = styled.ScrollView`
   flex: 1;
@@ -29,8 +33,8 @@ const Verified = styled.View`
   align-items: center;
   border-radius: 50px;
   background-color: #27ae60;
-  height: 18px;
-  width: 18px;
+  height: 16px;
+  width: 16px;
 `;
 
 const HeadingText = styled.Text`
@@ -90,20 +94,30 @@ const Txt = styled.Text`
   color: ${({ theme }) => theme.text_secondary};
 `;
 
-const SignIn = () => {
+const IconContainer = styled.View`
+  padding: 0px 6px;
+`;
+
+const ProfileCreate = () => {
   const theme = useTheme();
   const themeMode = useThemeContext();
   const { toggleTheme } = useThemeContext();
   const [user, setUser] = useState({
+    name: "",
     email: "",
     password: "",
+    dateOfBirth: "",
   });
-  const [error, setError] = useState("");
+  const [error, setError] = useState({
+    name: "",
+    email: "",
+    password: "",
+    dateOfBirth: "",
+  });
   const [loading, setLoading] = useState(false);
   const [isPasswordVisible, setPasswordVisible] = useState(false);
 
   const [buttonDisabled, setButtonDisabled] = useState(true);
-  const [buttonLoading, setButtonLoading] = useState(true);
 
   const handleInputChange = (value, name) => {
     // validation checks
@@ -167,12 +181,40 @@ const SignIn = () => {
       }
     }
 
+    if (name === "name") {
+      if (!value) {
+        setButtonDisabled(true);
+      }
+      // name validation regex pattern
+      const nameRegex = /^[A-Za-z0-9\s]+$/;
+
+      if (value && !nameRegex.test(value)) {
+        setError({
+          ...error,
+          name: "name must contain only letters, numbers and spaces",
+        });
+        setButtonDisabled(true);
+      } else {
+        setError({
+          ...error,
+          name: "",
+        });
+      }
+    }
+
     setUser({ ...user, [name]: value });
   };
 
   useEffect(() => {
     // If there is no error message and all the fields are filled, then enable the button
-    if (!error.email && !error.password && user.email && user.password) {
+    if (
+      !error.name &&
+      !error.email &&
+      !error.password &&
+      user.name &&
+      user.email &&
+      user.password
+    ) {
       setButtonDisabled(false);
     } else {
       setButtonDisabled(true);
@@ -181,7 +223,6 @@ const SignIn = () => {
 
   const handleSignIn = () => {
     toggleTheme();
-    setLoading(true);
   };
 
   return (
@@ -200,10 +241,8 @@ const SignIn = () => {
         }}
       >
         <Logo>Finwiz</Logo>
-        <HeadingText>Welcome Back 👋</HeadingText>
-        <SubHeadingText>
-          Welcome Back, Please Enter Your Email Id{" "}
-        </SubHeadingText>
+        <HeadingText>Profile Creation 🙋🏻</HeadingText>
+        <SubHeadingText>Few Details about you and good to go!</SubHeadingText>
       </View>
       <View
         style={{
@@ -218,7 +257,28 @@ const SignIn = () => {
             gap: 10,
           }}
         >
-          <InputText
+          <DateInput
+            startIcon={
+              <Icon
+                name="calendar-month-outline"
+                size={24}
+                color={theme.text_secondary}
+              />
+            }
+            value={user.dateOfBirth}
+            onChange={(date, name) => setUser({ ...user, dateOfBirth: date })}
+            label="Date of Birth"
+            placeholder="Enter your date of birth"
+            name="dateOfBirth"
+            error={error.dateOfBirth}
+          />
+          {/* <SelectableDropdown
+            options={["Male", "Female", "Other"]}
+            selectedValue={user.gender}
+            onValueChange={(gender) => setUser({ ...user, gender })}
+            label="Gender"
+          /> */}
+          {/* <InputText
             startIcon={
               <Icon
                 name="email-outline"
@@ -238,26 +298,27 @@ const SignIn = () => {
             onChangeText={handleInputChange}
             placeholder="Enter email address"
             label="Email Address"
-            name="email"
+            name="gender"
             type={"email-address"}
             error={error.email}
-          />
+          /> */}
           <InputText
             startIcon={
-              <Icon
-                name="lock-outline"
-                size={24}
-                color={theme.text_secondary}
-              />
+              <IconContainer>
+                <FontAwesome
+                  name="inr"
+                  size={23}
+                  color={theme.text_secondary}
+                />
+              </IconContainer>
             }
-            value={user.password}
+            value={user.monthlyIncome}
             onChangeText={handleInputChange}
-            secureTextEntry={!isPasswordVisible}
-            placeholder="Enter password"
-            label="Password"
-            name="password"
-            type={"default"}
-            error={error.password}
+            placeholder="Enter your monthly income"
+            label="Monthly Income"
+            name="monthlyIncome"
+            type={"numeric"}
+            error={error.monthlyIncome}
           />
           {/* <TextArea
             label="Description"
@@ -267,17 +328,8 @@ const SignIn = () => {
             error={error}
             rows={5} // Set the initial number of rows
             placeholder="Enter your description here..."
-          />{" "} */}
+          /> */}
         </View>
-        <ForgotButton>
-          <TextButton
-            onPress={() => router.replace("/forgot-password")}
-            label="Forgot Password?"
-            color={theme.primary}
-            disabled={false}
-            enabled={true}
-          />
-        </ForgotButton>
 
         <Button
           type="filled"
@@ -289,42 +341,9 @@ const SignIn = () => {
         >
           Continue
         </Button>
-
-        <Seperator>
-          <Hr />
-          <OrText>Or Continue With</OrText>
-          <Hr />
-        </Seperator>
-        <SocialAuth>
-          <Button
-            startIcon={
-              <Image
-                source={require("../../assets/icons/Google.png")}
-                style={{ width: 20, height: 20 }}
-              />
-            }
-            type="outlined"
-            bordercolor={theme.text_secondary_light}
-            color={theme.text_secondary}
-            loading={loading}
-            onPress={handleSignIn}
-          >
-            Continue with Google
-          </Button>
-        </SocialAuth>
-        <AlreadyAccount>
-          <Txt>Don't have an account on Renegan? </Txt>
-          <TextButton
-            label="Sign Up"
-            color={theme.primary}
-            disabled={false}
-            enabled={true}
-            onPress={() => router.replace("/sign-up")}
-          />
-        </AlreadyAccount>
       </View>
     </Wrapper>
   );
 };
 
-export default SignIn;
+export default ProfileCreate;
